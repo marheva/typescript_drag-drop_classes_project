@@ -214,8 +214,8 @@ enum ProjectStatus {
 
     // Project Item Class
     //
-
-    class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+    class ProjectItem extends Component<HTMLUListElement, HTMLLIElement>
+    implements Draggable {
         private project: Project;
         get persons() {
             if(this.project.people === 1) {
@@ -231,8 +231,17 @@ enum ProjectStatus {
             this.configure();
             this.renderContent();
         }
+        @autobind
+        dragStartHandler(_event: DragEvent) {
+          console.log('DragStart')
+        }
+        dragEndHandler(_event: DragEvent) {
+          console.log('DragEnd')
+        }
+
         configure() {
-            
+          this.element.addEventListener('dragstart', this.dragStartHandler);
+          this.element.addEventListener('dragend', this.dragEndHandler);
         }
 
         renderContent() {
