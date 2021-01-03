@@ -64,6 +64,21 @@ enum ProjectStatus {
         ProjectStatus.Active
       );
       this.projects.push(newProject);
+      this.updaeListeners();
+    }
+
+    moveProject(projectId: string, newStatus: ProjectStatus) {
+      const project = this.projects.find(project => {
+        return project.id === projectId;
+      })
+
+      if(project && project.status !== newStatus) {
+        project.status = newStatus;
+        this.updaeListeners();
+      }
+    }
+
+    private updaeListeners() {
       for (const listenerFn of this.listeners) {
         listenerFn(this.projects.slice());
       }
@@ -183,12 +198,20 @@ enum ProjectStatus {
     }
 
     @autobind
-    dragOverHandler(_event: DragEvent) {
-      const listEl = this.element.querySelector('ul')!;
-      listEl.classList.add('droppable')
+    dragOverHandler(event: DragEvent) {
+      if(event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+        event.preventDefault();
+        const listEl = this.element.querySelector('ul')!;
+        listEl.classList.add('droppable');
+      }
     }
-    dropHandler(_event: DragEvent) {}
-    
+
+    @autobind
+    dropHandler(event: DragEvent) {
+      const projectId = event.dataTransfer!.getData('text/plain');
+      projectState.moveProject(projectId, this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished);
+    }
+
     @autobind
     dragLeaveHandler(_event: DragEvent) {
       const listEl = this.element.querySelector('ul')!;
@@ -250,8 +273,9 @@ enum ProjectStatus {
             this.renderContent();
         }
         @autobind
-        dragStartHandler(_event: DragEvent) {
-          console.log('DragStart')
+        dragStartHandler(event: DragEvent) {
+          event.dataTransfer!.setData('text/plain', this.project.id);
+          event.dataTransfer!.effectAllowed = 'move';
         }
         dragEndHandler(_event: DragEvent) {
           console.log('DragEnd')

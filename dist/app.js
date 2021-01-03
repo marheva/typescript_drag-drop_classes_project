@@ -42,6 +42,18 @@ class ProjectState extends State {
     addProject(title, description, numOfPeople) {
         const newProject = new Project(Math.random().toString(), title, description, numOfPeople, ProjectStatus.Active);
         this.projects.push(newProject);
+        this.updaeListeners();
+    }
+    moveProject(projectId, newStatus) {
+        const project = this.projects.find(project => {
+            return project.id === projectId;
+        });
+        if (project && project.status !== newStatus) {
+            project.status = newStatus;
+            this.updaeListeners();
+        }
+    }
+    updaeListeners() {
         for (const listenerFn of this.listeners) {
             listenerFn(this.projects.slice());
         }
@@ -107,11 +119,17 @@ class ProjectList extends Component {
         this.configure();
         this.renderContent();
     }
-    dragOverHandler(_event) {
-        const listEl = this.element.querySelector('ul');
-        listEl.classList.add('droppable');
+    dragOverHandler(event) {
+        if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+            event.preventDefault();
+            const listEl = this.element.querySelector('ul');
+            listEl.classList.add('droppable');
+        }
     }
-    dropHandler(_event) { }
+    dropHandler(event) {
+        const projectId = event.dataTransfer.getData('text/plain');
+        projectState.moveProject(projectId, this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished);
+    }
     dragLeaveHandler(_event) {
         const listEl = this.element.querySelector('ul');
         listEl.classList.remove('droppable');
@@ -150,6 +168,9 @@ __decorate([
 ], ProjectList.prototype, "dragOverHandler", null);
 __decorate([
     autobind
+], ProjectList.prototype, "dropHandler", null);
+__decorate([
+    autobind
 ], ProjectList.prototype, "dragLeaveHandler", null);
 class ProjectItem extends Component {
     constructor(hostId, project) {
@@ -166,8 +187,9 @@ class ProjectItem extends Component {
             return `${this.project.people} persons`;
         }
     }
-    dragStartHandler(_event) {
-        console.log('DragStart');
+    dragStartHandler(event) {
+        event.dataTransfer.setData('text/plain', this.project.id);
+        event.dataTransfer.effectAllowed = 'move';
     }
     dragEndHandler(_event) {
         console.log('DragEnd');
