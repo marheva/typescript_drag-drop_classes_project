@@ -22,3 +22,6 @@
     * typescript - is a tipescript (lock in a specific version of typescript);
     * ts-loader - how to convert .ts code to .js code;
 * Entry & output configuration;
+
+-------------------------------
+* 3rd party libraries & typescript
